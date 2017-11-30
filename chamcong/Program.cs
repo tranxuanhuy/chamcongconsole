@@ -10,7 +10,33 @@ namespace chamcong
     {
         static void Main(string[] args)
         {
-            //chamconglythuyet();
+            List<DateTime> gioquetvantayLythuyet= chamconglythuyet();
+            List<DateTime> gioquetvantayThucte=chamcongthucte();
+            List<DateTime> cacngayquenchamcong = new List<DateTime>();
+            foreach (var lythuyet in gioquetvantayLythuyet)
+            {
+                bool thuctecochamcong = false;
+                foreach (var thucte in gioquetvantayThucte)
+                {
+                    TimeSpan diff = lythuyet - thucte;
+                    double minutes = Math.Abs(diff.TotalMinutes);
+                    if (minutes <70) 
+                    {
+                        thuctecochamcong=true;
+                        break;
+                    }
+                }
+                if (!thuctecochamcong) cacngayquenchamcong.Add(lythuyet);
+           }
+            using (System.IO.StreamWriter file =
+           new System.IO.StreamWriter(@"C:\quenchamcong.txt", false))
+            {
+                file.WriteLine(string.Join("\n", cacngayquenchamcong));
+            }
+        }
+
+        private static List<DateTime> chamcongthucte()
+        {
             Excel.Application xlApp = new Excel.Application();
             Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\myexcel1.xlsx");
             Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
@@ -19,27 +45,28 @@ namespace chamcong
             int rowCount = xlRange.Rows.Count;
             int colCount = xlRange.Columns.Count;
             List<DateTime> gioquetvantayThucte = new List<DateTime>();
-            for (int i = 9; i <= 28; i++)
+            for (int i = 9; i <= 36; i++)
             {
                 string ngaychuadinhdang = xlRange.Cells[i, 5].Value2.ToString();
                 double date = double.Parse(ngaychuadinhdang);
 
                 var ngay = DateTime.FromOADate(date).ToString("dd/MM/yyyy");
                 string gio = xlRange.Cells[i, 6].Value2.ToString();
-                string[] cacgio = gio.Replace("\n","").Split(';');
+                string[] cacgio = gio.Replace("\n", "").Split(';');
                 foreach (var item in cacgio)
                 {
-                    gioquetvantayThucte.Add(new DateTime(int.Parse(ngay.Split('/')[2]), int.Parse(ngay.Split('/')[1]), int.Parse(ngay.Split('/')[0]), int.Parse(item.Split(':')[0]), int.Parse(item.Split(':')[1]), 0)); 
+                    gioquetvantayThucte.Add(new DateTime(int.Parse(ngay.Split('/')[2]), int.Parse(ngay.Split('/')[1]), int.Parse(ngay.Split('/')[0]), int.Parse(item.Split(':')[0]), int.Parse(item.Split(':')[1]), 0));
                 }
-             }
+            }
             using (System.IO.StreamWriter file =
           new System.IO.StreamWriter(@"C:\myexcel1.txt", false))
             {
                 file.WriteLine(string.Join("\n", gioquetvantayThucte));
             }
+            return gioquetvantayThucte;
         }
 
-        private static void chamconglythuyet()
+        private static List<DateTime> chamconglythuyet()
         {
             Excel.Application xlApp = new Excel.Application();
             Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\myexcel.xlsx");
@@ -49,7 +76,7 @@ namespace chamcong
             int rowCount = xlRange.Rows.Count;
             int colCount = xlRange.Columns.Count;
 
-            bool[] data1rowtungca = new bool[4 * 31];
+            bool[] data1rowtungca = new bool[4 * 31+1];
 
             //xuat 1 ngay 4 ca la 4 gia tri bool
             for (int i = 10; i <= 10; i++)
@@ -87,6 +114,7 @@ namespace chamcong
             {
                 file.WriteLine(string.Join("\n", gioquetvantayLythuyet));
             }
+            return gioquetvantayLythuyet;
         }
     }
 }
