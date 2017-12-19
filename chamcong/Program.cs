@@ -1,17 +1,176 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;       //Microsoft Excel 14 object in references-> COM tab
 using System.Text;
 using System.Threading.Tasks;
-using Excel = Microsoft.Office.Interop.Excel;       //Microsoft Excel 14 object in references-> COM tab
+using Excel = Microsoft.Office.Interop.Excel;
 namespace chamcong
 {
     class Program
     {
         static void Main(string[] args)
         {
-            List<DateTime> gioquetvantayLythuyet= chamconglythuyet();
-            List<DateTime> gioquetvantayThucte=chamcongthucte();
+List<string> listparam=            taoparamconfig();
+foreach (var item in listparam)
+{
+    lietkequenchamcong1ng(item); 
+}
+        }
+
+        private static List<string>  taoparamconfig()
+        {
+            Excel.Application xlApp = new Excel.Application();
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\idnv.xlsx");
+            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
+            Excel.Range xlRange = xlWorksheet.UsedRange;
+
+            int rowCount = xlRange.Rows.Count;
+            int colCount = xlRange.Columns.Count;
+            List<string> listparam = new List<string>();
+            for (int i = 1; i <= rowCount; i++)
+            {
+                string param1ng = "";
+                for (int j = 1; j <= colCount; j++)
+                {
+                    param1ng += xlRange.Cells[i, j].Value2.ToString() + ",";
+                }
+                listparam.Add(param1ng);
+            }
+            layhangcuanhanvienlythuyet(listparam);
+            laykhoanghangcuanhanvienthucte(listparam);
+
+            using (System.IO.StreamWriter file =
+          new System.IO.StreamWriter(@"C:\listparam.txt", false))
+            {
+                file.WriteLine(string.Join("\n", listparam));
+            }
+
+            // Cleanup
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Marshal.FinalReleaseComObject(xlRange);
+            Marshal.FinalReleaseComObject(xlWorksheet);
+
+            xlWorkbook.Close(false, Type.Missing, Type.Missing);
+            Marshal.FinalReleaseComObject(xlWorkbook);
+
+            xlApp.Quit();
+            Marshal.FinalReleaseComObject(xlApp);
+            return listparam;
+        }
+
+        private static void layhangcuanhanvienlythuyet(List<string> listparam)
+        {
+            Excel.Application xlApp = new Excel.Application();
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\myexcel.xlsx");
+            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
+            Excel.Range xlRange = xlWorksheet.UsedRange;
+
+            int rowCount = xlRange.Rows.Count;
+            int colCount = xlRange.Columns.Count;
+            for (int k = 0; k < listparam.Count; k++)
+            {
+                for (int i = 10; i <= rowCount; i++)
+                {
+                            if (listparam[k].Split(',')[1] == xlRange.Cells[i, 2].Value2.ToString())
+                            {
+                                listparam[k] += i + ",";
+                                break;
+                            }
+                } 
+            }
+
+            using (System.IO.StreamWriter file =
+          new System.IO.StreamWriter(@"C:\listparam.txt", false))
+            {
+                file.WriteLine(string.Join("\n", listparam));
+            }
+
+            // Cleanup
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Marshal.FinalReleaseComObject(xlRange);
+            Marshal.FinalReleaseComObject(xlWorksheet);
+
+            xlWorkbook.Close(false, Type.Missing, Type.Missing);
+            Marshal.FinalReleaseComObject(xlWorkbook);
+
+            xlApp.Quit();
+            Marshal.FinalReleaseComObject(xlApp);
+        }
+
+        private static void laykhoanghangcuanhanvienthucte(List<string> listparam)
+        {
+            Excel.Application xlApp = new Excel.Application();
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\myexcel1.xlsx");
+            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
+            Excel.Range xlRange = xlWorksheet.UsedRange;
+
+            int rowCount = xlRange.Rows.Count;
+            int colCount = xlRange.Columns.Count;
+            for (int k = 0; k < listparam.Count; k++)
+            {
+                for (int i = 8; i <= rowCount; i++)
+                {
+                    {
+                        if (Convert.ToString(xlRange.Cells[i, 1].Value2) == "1")
+                            if (listparam[k].Split(',')[0] == xlRange.Cells[i - 1, 2].Value2.ToString())
+                            {
+                                listparam[k] += i + ",";
+                                for (int j = i ; j < rowCount; j++)
+                                {
+                                    if (Convert.ToString(xlRange.Cells[j, 2].Value2) != null)
+                                    {
+                                        listparam[k] += j - 1 + ",";
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                            else if (listparam[k].Split(',')[0] == Convert.ToString(xlRange.Cells[i - 2, 2].Value2))
+                            {
+                                listparam[k] += i + ",";
+                                for (int j = i; j < rowCount; j++)
+                                {
+                                    if (Convert.ToString(xlRange.Cells[j, 2].Value2) != null)
+                                    {
+                                        listparam[k] += j - 1 + ",";
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                    }
+                }
+            }
+
+            using (System.IO.StreamWriter file =
+          new System.IO.StreamWriter(@"C:\listparam.txt", false))
+            {
+                file.WriteLine(string.Join("\n", listparam));
+            }
+
+            // Cleanup
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Marshal.FinalReleaseComObject(xlRange);
+            Marshal.FinalReleaseComObject(xlWorksheet);
+
+            xlWorkbook.Close(false, Type.Missing, Type.Missing);
+            Marshal.FinalReleaseComObject(xlWorkbook);
+
+            xlApp.Quit();
+            Marshal.FinalReleaseComObject(xlApp);
+        }
+
+        private static void lietkequenchamcong1ng(string param)
+        {
+            List<DateTime> gioquetvantayLythuyet = chamconglythuyet(param);
+            List<DateTime> gioquetvantayThucte = chamcongthucte(param);
             List<DateTime> cacngayquenchamcong = new List<DateTime>();
             foreach (var lythuyet in gioquetvantayLythuyet)
             {
@@ -20,22 +179,23 @@ namespace chamcong
                 {
                     TimeSpan diff = lythuyet - thucte;
                     double minutes = Math.Abs(diff.TotalMinutes);
-                    if (minutes <70) 
+                    if (minutes < 70)
                     {
-                        thuctecochamcong=true;
+                        thuctecochamcong = true;
                         break;
                     }
                 }
                 if (!thuctecochamcong) cacngayquenchamcong.Add(lythuyet);
-           }
+            }
             using (System.IO.StreamWriter file =
-           new System.IO.StreamWriter(@"C:\quenchamcong.txt", false))
+           new System.IO.StreamWriter(@"C:\quenchamcong.txt", true))
             {
+                file.WriteLine(param.Split(',')[1]);
                 file.WriteLine(string.Join("\n", cacngayquenchamcong));
             }
         }
 
-        private static List<DateTime> chamcongthucte()
+        private static List<DateTime> chamcongthucte(string param)
         {
             Excel.Application xlApp = new Excel.Application();
             Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\myexcel1.xlsx");
@@ -45,7 +205,7 @@ namespace chamcong
             int rowCount = xlRange.Rows.Count;
             int colCount = xlRange.Columns.Count;
             List<DateTime> gioquetvantayThucte = new List<DateTime>();
-            for (int i = 9; i <= 36; i++)
+            for (int i = int.Parse(param.Split(',')[3]); i <= int.Parse(param.Split(',')[4]); i++)
             {
                 string ngaychuadinhdang = xlRange.Cells[i, 5].Value2.ToString();
                 double date = double.Parse(ngaychuadinhdang);
@@ -63,10 +223,24 @@ namespace chamcong
             {
                 file.WriteLine(string.Join("\n", gioquetvantayThucte));
             }
+
+            // Cleanup
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Marshal.FinalReleaseComObject(xlRange);
+            Marshal.FinalReleaseComObject(xlWorksheet);
+
+            xlWorkbook.Close(false, Type.Missing, Type.Missing);
+            Marshal.FinalReleaseComObject(xlWorkbook);
+
+            xlApp.Quit();
+            Marshal.FinalReleaseComObject(xlApp);
+
             return gioquetvantayThucte;
         }
 
-        private static List<DateTime> chamconglythuyet()
+        private static List<DateTime> chamconglythuyet(string param)
         {
             Excel.Application xlApp = new Excel.Application();
             Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\myexcel.xlsx");
@@ -79,16 +253,19 @@ namespace chamcong
             bool[] data1rowtungca = new bool[4 * 31+1];
 
             //xuat 1 ngay 4 ca la 4 gia tri bool
-            for (int i = 10; i <= 10; i++)
+            for (int i = int.Parse(param.Split(',')[2]); i <= int.Parse(param.Split(',')[2]); i++)
             {
                 int x = 0;
                 for (int j = 4; j <= 33; j++)
                 {
-                    string temp = xlRange.Cells[i, j].Value2.ToString();
-                    if (temp.Contains("S")) data1rowtungca[x] = true;
-                    if (temp.Contains("T")) data1rowtungca[x + 1] = true;
-                    if (temp.Contains("C")) data1rowtungca[x + 2] = true;
-                    if (temp.Contains("D")) data1rowtungca[x + 3] = true;
+                    string temp = Convert.ToString(xlRange.Cells[i, j].Value2);
+                    if (temp!=null)
+                    {
+                        if (temp.Contains("S")) data1rowtungca[x] = true;
+                        if (temp.Contains("T")) data1rowtungca[x + 1] = true;
+                        if (temp.Contains("C")) data1rowtungca[x + 2] = true;
+                        if (temp.Contains("D")) data1rowtungca[x + 3] = true; 
+                    }
                     x += 4;
                 }
             }
@@ -96,7 +273,7 @@ namespace chamcong
             //xuat ra gio dang le phai quet van tay theo ly thuyet
             bool giatridangco = false;
             List<DateTime> gioquetvantayLythuyet = new List<DateTime>();
-            for (int j = 0; j < 124; j++)
+            for (int j = 0; j < 120; j++)
             {
                 //truong hop len hoac xuong ca
                 if (data1rowtungca[j] != giatridangco)
@@ -114,6 +291,20 @@ namespace chamcong
             {
                 file.WriteLine(string.Join("\n", gioquetvantayLythuyet));
             }
+
+            // Cleanup
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Marshal.FinalReleaseComObject(xlRange);
+            Marshal.FinalReleaseComObject(xlWorksheet);
+
+            xlWorkbook.Close(false, Type.Missing, Type.Missing);
+            Marshal.FinalReleaseComObject(xlWorkbook);
+
+            xlApp.Quit();
+            Marshal.FinalReleaseComObject(xlApp);
+
             return gioquetvantayLythuyet;
         }
     }
