@@ -197,14 +197,24 @@ foreach (var item in listparam)
             }
 
             //xuat data report
-           // var datalythuyet = File.ReadAllLines(@"C:\myexcel.txt");
-           // using (System.IO.StreamWriter file =
-           //new System.IO.StreamWriter(@"C:\dataquenchamcong.txt", true))
-           // {
-           //     file.WriteLine(param.Split(',')[1]);
-
-           //     file.WriteLine(string.Join("\n", cacngayquenchamcong));
-           // }
+            var datalythuyet = File.ReadAllLines(@"C:\myexcel.txt");
+            using (System.IO.StreamWriter file =
+           new System.IO.StreamWriter(@"C:\dataquenchamcong.txt", true))
+            {
+                file.WriteLine(param.Split(',')[1]);
+                foreach (var ngayquenchamcong in cacngayquenchamcong)
+                {
+                    foreach (var rowlythuyet in datalythuyet)
+                    {
+                        if (rowlythuyet.Contains(ngayquenchamcong.ToString()))
+                        {
+                            file.WriteLine(rowlythuyet);
+                            break;
+                        }
+                    }
+                }
+                
+            }
         }
 
         private static List<DateTime> chamcongthucte(string param)
@@ -283,27 +293,31 @@ foreach (var item in listparam)
             bool giatridangco = false;
             string[] lenxuongca = new string[4 * 31 + 1];
             List<DateTime> gioquetvantayLythuyet = new List<DateTime>();
+            int index = 0;
             for (int j = 0; j < 120; j++)
             {
                 //truong hop len hoac xuong ca
                 if (data1rowtungca[j] != giatridangco)
                 {
                     giatridangco = !giatridangco;
-                    lenxuongca[j] = giatridangco == false ? "l" : "x";
+                    lenxuongca[index] = giatridangco == true ? "l" : "x";
+                    //len
                     if (giatridangco)
                     {
-                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 0, 00, 0)); lenxuongca[j] += ",s"; }
-                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 6, 00, 0)); lenxuongca[j] += ",t"; }
-                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 12, 00, 0)); lenxuongca[j] += ",c"; }
-                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 18, 00, 0)); lenxuongca[j] += ",d"; } 
+                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 0, 00, 0));  lenxuongca[index] += ",s"; }
+                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 6, 00, 0));  lenxuongca[index] += ",t"; }
+                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",c"; }
+                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",d"; } 
                     }
+                        //xuong
                     else
                     {
-                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 0, 00, 0)); lenxuongca[j] += ",t"; }
-                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 6, 00, 0)); lenxuongca[j] += ",c"; }
-                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 12, 00, 0)); lenxuongca[j] += ",d"; }
-                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 18, 00, 0)); lenxuongca[j] += ",s"; }
+                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 0, 00, 0));  lenxuongca[index] += ",d"; }
+                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 6, 00, 0));  lenxuongca[index] += ",s"; }
+                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",t"; }
+                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2017, 11, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",c"; }
                     }
+                    index++;
                 }
             }
 
