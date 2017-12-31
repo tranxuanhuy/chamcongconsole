@@ -165,6 +165,26 @@ foreach (var item in listparam)
             }
 
             //xuat data report
+           // var datalythuyet = File.ReadAllLines(@"C:\chamconglythuyet.txt");
+           // using (System.IO.StreamWriter file =
+           //new System.IO.StreamWriter(@"C:\dataquenchamcong.txt", true))
+           // {
+           //     file.WriteLine(param.Split('\t')[1]);
+           //     foreach (var ngayquenchamcong in cacngayquenchamcong)
+           //     {
+           //         foreach (var rowlythuyet in datalythuyet)
+           //         {
+           //             if (rowlythuyet.Contains(ngayquenchamcong.ToString()))
+           //             {
+           //                 file.WriteLine(rowlythuyet);
+           //                 break;
+           //             }
+           //         }
+           //     }
+
+           // }
+
+            //xuat data report dang doc hieu duoc
             var datalythuyet = File.ReadAllLines(@"C:\chamconglythuyet.txt");
             using (System.IO.StreamWriter file =
            new System.IO.StreamWriter(@"C:\dataquenchamcong.txt", true))
@@ -176,13 +196,41 @@ foreach (var item in listparam)
                     {
                         if (rowlythuyet.Contains(ngayquenchamcong.ToString()))
                         {
-                            file.WriteLine(rowlythuyet);
+                            file.WriteLine(reportdungcuphap(rowlythuyet));
                             break;
                         }
                     }
                 }
                 
             }
+        }
+
+        private static string reportdungcuphap(string rowlythuyet)
+        {
+            DateTime dt = DateTime.Parse(rowlythuyet.Split(' ')[0]);
+            if (rowlythuyet.Split(',')[1]=="x"&&rowlythuyet.Split(',')[2]=="d")
+            {
+               dt= dt.AddDays(-1);
+            }
+            string data = "Ngày " + dt.ToString("dd/MM/yyyy") + ": ";
+            switch (rowlythuyet.Split(',')[1])
+            {
+                case "l": data += "Lên ca "; break;
+                default:
+                    data += "Xuống ca ";
+                    break;
+            }
+            switch (rowlythuyet.Split(',')[2])
+            {
+                case "s": data += "Sáng (00h:06h) "; break;
+                case "t": data += "Trưa (06h:12h) "; break;
+                case "c": data += "Chiều (12h:18h) "; break;
+                default:
+                    data += "Đêm (18h:24h) ";
+                    break;
+            }
+            data += "quên chấm công";
+            return data;
         }
 
         private static List<DateTime> chamcongthucte(string param)
@@ -260,7 +308,7 @@ foreach (var item in listparam)
             string[] lenxuongca = new string[4 * 31 + 1];
             List<DateTime> gioquetvantayLythuyet = new List<DateTime>();
             int index = 0;
-            for (int j = 0; j < 120; j++)
+            for (int j = 0; j < 124; j++)
             {
                 //truong hop len hoac xuong ca
                 if (data1rowtungca[j] != giatridangco)
