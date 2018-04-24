@@ -12,7 +12,11 @@ namespace chamcong
     {
         static void Main(string[] args)
         {
-List<string> listparam=            taoparamconfig();
+            ConvertXLSX.ConvertXLSX2Unicodetxt(@"C:\idnv.xlsx");
+            ConvertXLSX.ConvertXLSX2Unicodetxt(@"C:\myexcel.xlsx");
+            ConvertXLSX.ConvertXLSX2CSV(@"C:\myexcel1.xlsx");
+
+            List<string> listparam=            taoparamconfig();
 foreach (var item in listparam)
 {
     lietkequenchamcong1ng(item);
@@ -37,6 +41,7 @@ foreach (var item in listparam)
             Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
             Excel.Range xlRange = xlWorksheet.UsedRange;
 
+            //lythuyet nv cuoi hang 29, ko co hang trang o sau vn cuoi cung
             int rowCount = 29;
             int colCount = xlRange.Columns.Count;
             for (int k = 0; k < listparam.Count; k++)
@@ -318,18 +323,18 @@ foreach (var item in listparam)
                     //len
                     if (giatridangco)
                     {
-                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2017, 12, j / 4 + 1, 0, 00, 0));  lenxuongca[index] += ",s"; }
-                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2017, 12, j / 4 + 1, 6, 00, 0));  lenxuongca[index] += ",t"; }
-                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2017, 12, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",c"; }
-                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2017, 12, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",d"; } 
-                    }
-                        //xuong
-                    else
-                    {
-                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2017, 12, j / 4 + 1, 0, 00, 0));  lenxuongca[index] += ",d"; }
-                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2017, 12, j / 4 + 1, 6, 00, 0));  lenxuongca[index] += ",s"; }
-                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2017, 12, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",t"; }
-                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2017, 12, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",c"; }
+                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 0, 00, 0));  lenxuongca[index] += ",s"; }
+                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 6, 00, 0));  lenxuongca[index] += ",t"; }
+                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",c"; }
+                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",d"; } 
+                    }                                                            
+                        //xuong                                                  
+                    else                                                         
+                    {                                                            
+                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 0, 00, 0));  lenxuongca[index] += ",d"; }
+                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 6, 00, 0));  lenxuongca[index] += ",s"; }
+                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",t"; }
+                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",c"; }
                     }
                     index++;
                 }
