@@ -10,20 +10,23 @@ namespace chamcong
 {
     class Program
     {
+        private static int year = 2018;
+        private static int month = 6;
+
         static void Main(string[] args)
         {
             ConvertXLSX.ConvertXLSX2Unicodetxt(@"C:\idnv.xlsx");
             ConvertXLSX.ConvertXLSX2Unicodetxt(@"C:\myexcel.xlsx");
             ConvertXLSX.ConvertXLSX2CSV(@"C:\myexcel1.xlsx");
 
-            List<string> listparam=            taoparamconfig();
-foreach (var item in listparam)
-{
-    lietkequenchamcong1ng(item);
-}
+            List<string> listparam = taoparamconfig();
+            foreach (var item in listparam)
+            {
+                lietkequenchamcong1ng(item);
+            }
         }
 
-        private static List<string>  taoparamconfig()
+        private static List<string> taoparamconfig()
         {
             var data = File.ReadAllLines(@"C:\idnv.txt");
             List<string> listparam = new List<string>();
@@ -48,12 +51,12 @@ foreach (var item in listparam)
             {
                 for (int i = 9; i <= rowCount; i++)
                 {
-                            if (listparam[k].Split(',')[1] == xlRange.Cells[i, 2].Value2.ToString())
-                            {
-                                listparam[k] += i + ",";
-                                break;
-                            }
-                } 
+                    if (listparam[k].Split(',')[1] == xlRange.Cells[i, 2].Value2.ToString())
+                    {
+                        listparam[k] += i + ",";
+                        break;
+                    }
+                }
             }
 
             using (System.IO.StreamWriter file =
@@ -94,7 +97,7 @@ foreach (var item in listparam)
                             if (listparam[k].Split(',')[0] == xlRange.Cells[i - 1, 2].Value2.ToString())
                             {
                                 listparam[k] += i + ",";
-                                for (int j = i ; j < rowCount; j++)
+                                for (int j = i; j < rowCount; j++)
                                 {
                                     if (Convert.ToString(xlRange.Cells[j, 2].Value2) != null)
                                     {
@@ -170,24 +173,24 @@ foreach (var item in listparam)
             }
 
             //xuat data report
-           // var datalythuyet = File.ReadAllLines(@"C:\chamconglythuyet.txt");
-           // using (System.IO.StreamWriter file =
-           //new System.IO.StreamWriter(@"C:\dataquenchamcong.txt", true))
-           // {
-           //     file.WriteLine(param.Split('\t')[1]);
-           //     foreach (var ngayquenchamcong in cacngayquenchamcong)
-           //     {
-           //         foreach (var rowlythuyet in datalythuyet)
-           //         {
-           //             if (rowlythuyet.Contains(ngayquenchamcong.ToString()))
-           //             {
-           //                 file.WriteLine(rowlythuyet);
-           //                 break;
-           //             }
-           //         }
-           //     }
+            // var datalythuyet = File.ReadAllLines(@"C:\chamconglythuyet.txt");
+            // using (System.IO.StreamWriter file =
+            //new System.IO.StreamWriter(@"C:\dataquenchamcong.txt", true))
+            // {
+            //     file.WriteLine(param.Split('\t')[1]);
+            //     foreach (var ngayquenchamcong in cacngayquenchamcong)
+            //     {
+            //         foreach (var rowlythuyet in datalythuyet)
+            //         {
+            //             if (rowlythuyet.Contains(ngayquenchamcong.ToString()))
+            //             {
+            //                 file.WriteLine(rowlythuyet);
+            //                 break;
+            //             }
+            //         }
+            //     }
 
-           // }
+            // }
 
             //xuat data report dang doc hieu duoc
             var datalythuyet = File.ReadAllLines(@"C:\chamconglythuyet.txt");
@@ -206,16 +209,16 @@ foreach (var item in listparam)
                         }
                     }
                 }
-                
+
             }
         }
 
         private static string reportdungcuphap(string rowlythuyet)
         {
             DateTime dt = DateTime.Parse(rowlythuyet.Split(' ')[0]);
-            if (rowlythuyet.Split(',')[1]=="x"&&rowlythuyet.Split(',')[2]=="d")
+            if (rowlythuyet.Split(',')[1] == "x" && rowlythuyet.Split(',')[2] == "d")
             {
-               dt= dt.AddDays(-1);
+                dt = dt.AddDays(-1);
             }
             string data = "Ngày " + dt.ToString("dd/MM/yyyy") + ": ";
             switch (rowlythuyet.Split(',')[1])
@@ -244,8 +247,8 @@ foreach (var item in listparam)
             List<DateTime> gioquetvantayThucte = new List<DateTime>();
 
             //lay hang dau tien chua gio cham cong
-            bool getrowdata=false;
-            string ngaychuadinhdang ="01/11/2017";
+            bool getrowdata = false;
+            string ngaychuadinhdang = "01/11/2017";
             string giochuadinhdang;
             foreach (var item in data)
             {
@@ -254,23 +257,23 @@ foreach (var item in listparam)
                     //quet hang cuoi cung thi thoat vong lap
                     if (item.Split(',')[0] == "") break;
 
-                    if(!item.Split(',')[0].Contains("\""))
+                    if (!item.Split(',')[0].Contains("\""))
                     {
-                         ngaychuadinhdang = item.Split(',')[4];
-                         giochuadinhdang = item.Split(',')[5].Replace("\"", "");
+                        ngaychuadinhdang = item.Split(',')[4];
+                        giochuadinhdang = item.Split(',')[5].Replace("\"", "");
                     }
                     else
-                         giochuadinhdang = item.Split(',')[0].Replace("\"", "");
+                        giochuadinhdang = item.Split(',')[0].Replace("\"", "");
                     string[] cacgio = giochuadinhdang.Replace("\n", "").Split(';');
                     foreach (var gio in cacgio)
                     {
-                        if(gio!="")
-                        gioquetvantayThucte.Add(new DateTime(int.Parse(ngaychuadinhdang.Split('/')[2]), int.Parse(ngaychuadinhdang.Split('/')[1]), int.Parse(ngaychuadinhdang.Split('/')[0]), int.Parse(gio.Split(':')[0]), int.Parse(gio.Split(':')[1]), 0));
+                        if (gio != "")
+                            gioquetvantayThucte.Add(new DateTime(int.Parse(ngaychuadinhdang.Split('/')[2]), int.Parse(ngaychuadinhdang.Split('/')[1]), int.Parse(ngaychuadinhdang.Split('/')[0]), int.Parse(gio.Split(':')[0]), int.Parse(gio.Split(':')[1]), 0));
                     }
                 }
                 if (item.Split(',')[1] == param.Split('\t')[0] && !getrowdata) getrowdata = true;
             }
-    
+
             using (System.IO.StreamWriter file =
           new System.IO.StreamWriter(@"C:\myexcel1.txt", false))
             {
@@ -284,12 +287,12 @@ foreach (var item in listparam)
         {
             var data = File.ReadAllLines(@"C:\myexcel.txt");
 
-            bool[] data1rowtungca = new bool[4 * 31+1];
+            bool[] data1rowtungca = new bool[4 * 31 + 1];
 
             //xuat 1 ngay 4 ca la 4 gia tri bool
             foreach (var row in data)
             {
-                if (row.Split('\t')[1]==param.Split('\t')[1])
+                if (row.Split('\t')[1] == param.Split('\t')[1])
                 {
                     int x = 0;
                     for (int j = 2; j <= 32; j++)
@@ -303,17 +306,18 @@ foreach (var item in listparam)
                             if (temp.Contains("D")) data1rowtungca[x + 3] = true;
                         }
                         x += 4;
-                    }  
+                    }
                 }
             }
-            
+
 
             //xuat ra gio dang le phai quet van tay theo ly thuyet
             bool giatridangco = false;
             string[] lenxuongca = new string[4 * 31 + 1];
             List<DateTime> gioquetvantayLythuyet = new List<DateTime>();
             int index = 0;
-            for (int j = 0; j < 124; j++)
+            //ngay co 30 ngay
+            for (int j = 0; j < DateTime.DaysInMonth(year, month) * 4; j++)
             {
                 //truong hop len hoac xuong ca
                 if (data1rowtungca[j] != giatridangco)
@@ -323,33 +327,33 @@ foreach (var item in listparam)
                     //len
                     if (giatridangco)
                     {
-                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 0, 00, 0));  lenxuongca[index] += ",s"; }
-                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 6, 00, 0));  lenxuongca[index] += ",t"; }
-                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",c"; }
-                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",d"; } 
-                    }                                                            
-                        //xuong                                                  
-                    else                                                         
-                    {                                                            
-                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 0, 00, 0));  lenxuongca[index] += ",d"; }
-                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 6, 00, 0));  lenxuongca[index] += ",s"; }
-                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",t"; }
-                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(2018,4, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",c"; }
+                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 0, 00, 0)); lenxuongca[index] += ",s"; }
+                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 6, 00, 0)); lenxuongca[index] += ",t"; }
+                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",c"; }
+                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",d"; }
+                    }
+                    //xuong                                                  
+                    else
+                    {
+                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 0, 00, 0)); lenxuongca[index] += ",d"; }
+                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 6, 00, 0)); lenxuongca[index] += ",s"; }
+                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",t"; }
+                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",c"; }
                     }
                     index++;
                 }
             }
 
-                        using (System.IO.StreamWriter file =
-           new System.IO.StreamWriter(@"C:\chamconglythuyet.txt", false))
+            using (System.IO.StreamWriter file =
+new System.IO.StreamWriter(@"C:\chamconglythuyet.txt", false))
             {
                 int j = 0;
                 foreach (var item in gioquetvantayLythuyet)
                 {
-                    file.WriteLine(item+","+lenxuongca[j]);
+                    file.WriteLine(item + "," + lenxuongca[j]);
                     j++;
                 }
-                
+
             }
 
             return gioquetvantayLythuyet;
