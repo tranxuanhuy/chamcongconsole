@@ -1,4 +1,6 @@
-﻿using System;
+﻿using iTextSharp.text.pdf;
+using iTextSharp.text.pdf.parser;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,19 +12,38 @@ namespace chamcong
 {
     class Program
     {
+        private const string fileThucte = "Cham cong Dai Long Security 05.2018.pdf";
+        private const string fileLythuyet = "a.xlsx";
         private static int year = 2018;
-        private static int month = 6;
+        private static int month = 5;
 
         static void Main(string[] args)
         {
             ConvertXLSX.ConvertXLSX2Unicodetxt(@"C:\idnv.xlsx");
-            ConvertXLSX.ConvertXLSX2Unicodetxt(@"C:\myexcel.xlsx");
-            ConvertXLSX.ConvertXLSX2CSV(@"C:\myexcel1.xlsx");
+            ConvertXLSX.ConvertXLSX2Unicodetxt(fileLythuyet);
+
+            //ConvertXLSX.ConvertXLSX2CSV(@"C:\myexcel1.xlsx");
+            File.WriteAllText(System.IO.Path.GetFileNameWithoutExtension(fileThucte),ExtractTextFromPdf(fileThucte));
 
             List<string> listparam = taoparamconfig();
             foreach (var item in listparam)
             {
                 lietkequenchamcong1ng(item);
+            }
+        }
+
+        public static string ExtractTextFromPdf(string path)
+        {
+            using (PdfReader reader = new PdfReader(path))
+            {
+                StringBuilder text = new StringBuilder();
+
+                for (int i = 1; i <= reader.NumberOfPages; i++)
+                {
+                    text.Append(PdfTextExtractor.GetTextFromPage(reader, i));
+                }
+
+                return text.ToString();
             }
         }
 
@@ -40,7 +61,7 @@ namespace chamcong
         private static void layhangcuanhanvienlythuyet(List<string> listparam)
         {
             Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\myexcel.xlsx");
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(fileLythuyet);
             Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
             Excel.Range xlRange = xlWorksheet.UsedRange;
 
@@ -82,7 +103,7 @@ namespace chamcong
         private static void laykhoanghangcuanhanvienthucte(List<string> listparam)
         {
             Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\myexcel1.xlsx");
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(fileThucte.Split('.')[0]+".txt");
             Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
             Excel.Range xlRange = xlWorksheet.UsedRange;
 
@@ -243,7 +264,7 @@ namespace chamcong
 
         private static List<DateTime> chamcongthucte(string param)
         {
-            var data = File.ReadAllLines(@"C:\myexcel1.csv");
+            var data = File.ReadAllLines(fileThucte.Split('.')[0] + ".txt");
             List<DateTime> gioquetvantayThucte = new List<DateTime>();
 
             //lay hang dau tien chua gio cham cong
@@ -275,7 +296,7 @@ namespace chamcong
             }
 
             using (System.IO.StreamWriter file =
-          new System.IO.StreamWriter(@"C:\myexcel1.txt", false))
+          new System.IO.StreamWriter(fileThucte.Split('.')[0] + ".txt", false))
             {
                 file.WriteLine(string.Join("\n", gioquetvantayThucte));
             }
@@ -285,7 +306,7 @@ namespace chamcong
 
         private static List<DateTime> chamconglythuyet(string param)
         {
-            var data = File.ReadAllLines(@"C:\myexcel.txt");
+            var data = File.ReadAllLines(fileLythuyet.Split('.')[0] + ".txt");
 
             bool[] data1rowtungca = new bool[4 * 31 + 1];
 
