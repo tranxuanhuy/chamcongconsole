@@ -2,10 +2,12 @@
 using iTextSharp.text.pdf.parser;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;       //Microsoft Excel 14 object in references-> COM tab
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Excel = Microsoft.Office.Interop.Excel;
 namespace chamcong
@@ -13,23 +15,136 @@ namespace chamcong
     class Program
     {
         private const string fileThucte = "Cham cong Dai Long Security 05.2018.pdf";
-        private const string fileLythuyet = "a.xlsx";
-        private static int year = 2018;
-        private static int month = 5;
+        private const string fileLythuyet = @"C:\a.xlsx";
+        private static int year = int.Parse(Regex.Match(fileThucte, @"\d{4}").Value);
+        private static int month = int.Parse(Regex.Match(fileThucte, @"\d{2}").Value);
+        private static string idnv= @"C:\idnv.xlsx";
 
         static void Main(string[] args)
         {
-            ConvertXLSX.ConvertXLSX2Unicodetxt(@"C:\idnv.xlsx");
+            File.Delete(@"C:\dataquenchamcong.txt");
+
+            ConvertXLSX.ConvertXLSX2Unicodetxt(idnv);
             ConvertXLSX.ConvertXLSX2Unicodetxt(fileLythuyet);
 
             //ConvertXLSX.ConvertXLSX2CSV(@"C:\myexcel1.xlsx");
-            File.WriteAllText(System.IO.Path.GetFileNameWithoutExtension(fileThucte),ExtractTextFromPdf(fileThucte));
+            File.WriteAllText(System.IO.Path.GetFileNameWithoutExtension(fileThucte),DateTimeStaffIDFilter(ExtractTextFromPdf(fileThucte)));
 
+            if (IdnvFileHaveAllStaffIDThucte()!=null)
+            {
+                Console.WriteLine(IdnvFileHaveAllStaffIDThucte());
+                Console.ReadKey();
+                return; 
+            }
             List<string> listparam = taoparamconfig();
             foreach (var item in listparam)
             {
+                Console.WriteLine(item.ToString());
                 lietkequenchamcong1ng(item);
+                
             }
+        }
+
+        private static string IdnvFileHaveAllStaffIDThucte()
+        {
+            string stringWithDateTime = File.ReadAllText(System.IO.Path.GetFileNameWithoutExtension(fileThucte));
+        
+            string staffIDThieu = null;
+            while (true)
+            {
+     
+                Match staffIDMatch = Regex.Match(stringWithDateTime, @"\d{5}");
+
+
+
+               if (!string.IsNullOrEmpty(staffIDMatch.Value))
+                {
+                    string staffIDThucte = staffIDMatch.Value;
+
+                    if (!File.ReadAllText("C:\\"+System.IO.Path.GetFileNameWithoutExtension(idnv)+".txt").Contains(staffIDThucte))
+                    {
+                        staffIDThieu += staffIDMatch.Value + "\n"; 
+                    }
+
+
+                    stringWithDateTime = stringWithDateTime.Substring(staffIDMatch.Index + 1);
+
+
+                }
+             
+                else 
+                {
+                    break;
+                }
+
+            }
+            return staffIDThieu;
+        }
+
+        private static string DateTimeStaffIDFilter(string stringWithDateTime)
+        {
+            string filtered = null;
+            while (true)
+            {
+                Match dateMatch = Regex.Match(stringWithDateTime, @"\d{2}\/\d{2}\/\d{4}");
+                Match timeMatch = Regex.Match(stringWithDateTime, @"\d{2}\:\d{2}\:\d{2}");
+                Match staffIDMatch = Regex.Match(stringWithDateTime, @"\d{5}");
+
+                int minIndex = int.MaxValue;
+                if (!string.IsNullOrEmpty(dateMatch.Value))
+                    minIndex= Math.Min(minIndex,dateMatch.Index);
+                if (!string.IsNullOrEmpty(timeMatch.Value))
+                    minIndex = Math.Min(minIndex, timeMatch.Index);
+                if (!string.IsNullOrEmpty(staffIDMatch.Value))
+                    minIndex = Math.Min(minIndex, staffIDMatch.Index);
+
+                if (minIndex == dateMatch.Index)
+                {
+                    string date = dateMatch.Value;
+
+                        var dateTime = DateTime.ParseExact(date, "dd/MM/yyyy", CultureInfo.CurrentCulture);
+
+                    //bo qua 23/05/2018
+                    //Page 9 of 10No.Employee Full Name Position Record Record Time
+                    if (!stringWithDateTime.Substring(dateMatch.Index).Split('\n')[1].StartsWith("Page"))
+                    {
+                        filtered += dateTime.ToString("dd/MM/yyyy") + "\n"; 
+                    }
+                        stringWithDateTime = stringWithDateTime.Substring(dateMatch.Index + 1);
+                    
+                   
+                }
+               else if (minIndex == timeMatch.Index)
+                {
+                    string date = timeMatch.Value;
+
+                    var dateTime = DateTime.ParseExact(date, "HH:mm:ss", CultureInfo.CurrentCulture);
+
+                    filtered += dateTime.ToString("HH:mm:ss") + "\n";
+                    stringWithDateTime = stringWithDateTime.Substring(timeMatch.Index + 1);
+
+
+                }
+                else if (minIndex == staffIDMatch.Index)
+                {
+                    string date = staffIDMatch.Value;
+
+                    
+
+                    filtered += date.ToString() + "\n";
+                    stringWithDateTime = stringWithDateTime.Substring(staffIDMatch.Index + 1);
+
+
+                }
+                else
+                {
+                    break;
+                }
+
+            }
+
+            
+            return filtered;
         }
 
         public static string ExtractTextFromPdf(string path)
@@ -58,113 +173,8 @@ namespace chamcong
             return listparam;
         }
 
-        private static void layhangcuanhanvienlythuyet(List<string> listparam)
-        {
-            Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(fileLythuyet);
-            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
-            Excel.Range xlRange = xlWorksheet.UsedRange;
-
-            //lythuyet nv cuoi hang 29, ko co hang trang o sau vn cuoi cung
-            int rowCount = 29;
-            int colCount = xlRange.Columns.Count;
-            for (int k = 0; k < listparam.Count; k++)
-            {
-                for (int i = 9; i <= rowCount; i++)
-                {
-                    if (listparam[k].Split(',')[1] == xlRange.Cells[i, 2].Value2.ToString())
-                    {
-                        listparam[k] += i + ",";
-                        break;
-                    }
-                }
-            }
-
-            using (System.IO.StreamWriter file =
-          new System.IO.StreamWriter(@"C:\listparam.txt", false))
-            {
-                file.WriteLine(string.Join("\n", listparam));
-            }
-
-            // Cleanup
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
-            Marshal.FinalReleaseComObject(xlRange);
-            Marshal.FinalReleaseComObject(xlWorksheet);
-
-            xlWorkbook.Close(false, Type.Missing, Type.Missing);
-            Marshal.FinalReleaseComObject(xlWorkbook);
-
-            xlApp.Quit();
-            Marshal.FinalReleaseComObject(xlApp);
-        }
-
-        private static void laykhoanghangcuanhanvienthucte(List<string> listparam)
-        {
-            Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(fileThucte.Split('.')[0]+".txt");
-            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
-            Excel.Range xlRange = xlWorksheet.UsedRange;
-
-            int rowCount = xlRange.Rows.Count;
-            int colCount = xlRange.Columns.Count;
-            for (int k = 0; k < listparam.Count; k++)
-            {
-                for (int i = 8; i <= rowCount; i++)
-                {
-                    {
-                        if (Convert.ToString(xlRange.Cells[i, 1].Value2) == "1")
-                            if (listparam[k].Split(',')[0] == xlRange.Cells[i - 1, 2].Value2.ToString())
-                            {
-                                listparam[k] += i + ",";
-                                for (int j = i; j < rowCount; j++)
-                                {
-                                    if (Convert.ToString(xlRange.Cells[j, 2].Value2) != null)
-                                    {
-                                        listparam[k] += j - 1 + ",";
-                                        break;
-                                    }
-                                }
-                                break;
-                            }
-                            else if (listparam[k].Split(',')[0] == Convert.ToString(xlRange.Cells[i - 2, 2].Value2))
-                            {
-                                listparam[k] += i + ",";
-                                for (int j = i; j < rowCount; j++)
-                                {
-                                    if (Convert.ToString(xlRange.Cells[j, 2].Value2) != null)
-                                    {
-                                        listparam[k] += j - 1 + ",";
-                                        break;
-                                    }
-                                }
-                                break;
-                            }
-                    }
-                }
-            }
-
-            using (System.IO.StreamWriter file =
-          new System.IO.StreamWriter(@"C:\listparam.txt", false))
-            {
-                file.WriteLine(string.Join("\n", listparam));
-            }
-
-            // Cleanup
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
-            Marshal.FinalReleaseComObject(xlRange);
-            Marshal.FinalReleaseComObject(xlWorksheet);
-
-            xlWorkbook.Close(false, Type.Missing, Type.Missing);
-            Marshal.FinalReleaseComObject(xlWorkbook);
-
-            xlApp.Quit();
-            Marshal.FinalReleaseComObject(xlApp);
-        }
-
+      
+      
         private static void lietkequenchamcong1ng(string param)
         {
             List<DateTime> gioquetvantayLythuyet = chamconglythuyet(param);
@@ -264,35 +274,57 @@ namespace chamcong
 
         private static List<DateTime> chamcongthucte(string param)
         {
-            var data = File.ReadAllLines(fileThucte.Split('.')[0] + ".txt");
+            string stringWithDateTime = File.ReadAllText(System.IO.Path.GetFileNameWithoutExtension(fileThucte));
             List<DateTime> gioquetvantayThucte = new List<DateTime>();
 
-            //lay hang dau tien chua gio cham cong
-            bool getrowdata = false;
-            string ngaychuadinhdang = "01/11/2017";
-            string giochuadinhdang;
-            foreach (var item in data)
+            try
             {
-                if (getrowdata && !item.Contains("No"))
-                {
-                    //quet hang cuoi cung thi thoat vong lap
-                    if (item.Split(',')[0] == "") break;
+                stringWithDateTime = stringWithDateTime.Substring(stringWithDateTime.IndexOf(param.Split('\t')[0])+1);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
 
-                    if (!item.Split(',')[0].Contains("\""))
-                    {
-                        ngaychuadinhdang = item.Split(',')[4];
-                        giochuadinhdang = item.Split(',')[5].Replace("\"", "");
-                    }
-                    else
-                        giochuadinhdang = item.Split(',')[0].Replace("\"", "");
-                    string[] cacgio = giochuadinhdang.Replace("\n", "").Split(';');
-                    foreach (var gio in cacgio)
-                    {
-                        if (gio != "")
-                            gioquetvantayThucte.Add(new DateTime(int.Parse(ngaychuadinhdang.Split('/')[2]), int.Parse(ngaychuadinhdang.Split('/')[1]), int.Parse(ngaychuadinhdang.Split('/')[0]), int.Parse(gio.Split(':')[0]), int.Parse(gio.Split(':')[1]), 0));
-                    }
+                return null;
+            }
+            string dateMatchSave = null ;
+            while (true)
+            {
+                Match dateMatch = Regex.Match(stringWithDateTime, @"\d{2}\/\d{2}\/\d{4}");
+                Match timeMatch = Regex.Match(stringWithDateTime, @"\d{2}\:\d{2}\:\d{2}");
+                Match staffIDMatch = Regex.Match(stringWithDateTime, @"\d{5}");
+
+                
+
+                int minIndex = int.MaxValue;
+                if (!string.IsNullOrEmpty(dateMatch.Value))
+                    minIndex = Math.Min(minIndex, dateMatch.Index);
+                if (!string.IsNullOrEmpty(timeMatch.Value))
+                    minIndex = Math.Min(minIndex, timeMatch.Index);
+                if (!string.IsNullOrEmpty(staffIDMatch.Value))
+                    minIndex = Math.Min(minIndex, staffIDMatch.Index);
+
+                 if (minIndex == timeMatch.Index)
+                {
+                    string date = timeMatch.Value;
+
+                    var dateTime = DateTime.ParseExact(date, "HH:mm:ss", CultureInfo.CurrentCulture);
+
+                    gioquetvantayThucte.Add(new DateTime(int.Parse(dateMatchSave.Split('/')[2]), int.Parse(dateMatchSave.Split('/')[1]), int.Parse(dateMatchSave.Split('/')[0]), int.Parse(timeMatch.Value.Split(':')[0]), int.Parse(timeMatch.Value.Split(':')[1]), 0));
+                    stringWithDateTime = stringWithDateTime.Substring(timeMatch.Index + 1);
+
+
                 }
-                if (item.Split(',')[1] == param.Split('\t')[0] && !getrowdata) getrowdata = true;
+                else if (minIndex == dateMatch.Index)
+                {
+                    dateMatchSave = dateMatch.Value;
+                    stringWithDateTime = stringWithDateTime.Substring(dateMatch.Index + 1);
+                }
+
+                else if (minIndex == staffIDMatch.Index|| string.IsNullOrEmpty(staffIDMatch.Value))
+                {
+                    break;
+                }
+                
             }
 
             using (System.IO.StreamWriter file =
@@ -316,7 +348,7 @@ namespace chamcong
                 if (row.Split('\t')[1] == param.Split('\t')[1])
                 {
                     int x = 0;
-                    for (int j = 2; j <= 32; j++)
+                    for (int j = 2; j <= DateTime.DaysInMonth(year, month)+2; j++)
                     {
                         string temp = row.Split('\t')[j];
                         if (temp != null)
