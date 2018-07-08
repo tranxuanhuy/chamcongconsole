@@ -14,8 +14,8 @@ namespace chamcong
 {
     class Program
     {
-        private const string fileThucte = "Cham cong Dai Long Security 05.2018.pdf";
-        private const string fileLythuyet = @"C:\a.xlsx";
+        private const string fileThucte = @"C:\Cham cong Dai Long Security 05.2018.pdf";
+        private const string fileLythuyet = @"C:\BẢNG CHẤM CÔNG T05 2018 (1).xlsx";
         private static int year = int.Parse(Regex.Match(fileThucte, @"\d{4}").Value);
         private static int month = int.Parse(Regex.Match(fileThucte, @"\d{2}").Value);
         private static string idnv= @"C:\idnv.xlsx";
@@ -23,15 +23,25 @@ namespace chamcong
         static void Main(string[] args)
         {
             File.Delete(@"C:\dataquenchamcong.txt");
+            File.Delete(@"C:\quenchamcong.txt");
 
             ConvertXLSX.ConvertXLSX2Unicodetxt(idnv);
             ConvertXLSX.ConvertXLSX2Unicodetxt(fileLythuyet);
 
-            //ConvertXLSX.ConvertXLSX2CSV(@"C:\myexcel1.xlsx");
+            
             File.WriteAllText(System.IO.Path.GetFileNameWithoutExtension(fileThucte),DateTimeStaffIDFilter(ExtractTextFromPdf(fileThucte)));
+
+            if (IdnvFileHaveAllStaffNameLythuyet() != null)
+            {
+                Console.WriteLine("ly thuyet");
+                Console.WriteLine(IdnvFileHaveAllStaffNameLythuyet());
+                Console.ReadKey();
+                return;
+            }
 
             if (IdnvFileHaveAllStaffIDThucte()!=null)
             {
+                Console.WriteLine("thuc te");
                 Console.WriteLine(IdnvFileHaveAllStaffIDThucte());
                 Console.ReadKey();
                 return; 
@@ -43,6 +53,28 @@ namespace chamcong
                 lietkequenchamcong1ng(item);
                 
             }
+        }
+
+        private static string IdnvFileHaveAllStaffNameLythuyet()
+        {
+            var stringWithStaffName = File.ReadAllLines("C:\\" + System.IO.Path.GetFileNameWithoutExtension(fileLythuyet) + ".txt").Skip(8);
+
+            string staffNameThieu = null;
+
+
+            foreach (var item in stringWithStaffName)
+            {
+                if (!File.ReadAllText("C:\\" + System.IO.Path.GetFileNameWithoutExtension(idnv) + ".txt").Contains(item.Split('\t')[1])&&!string.IsNullOrWhiteSpace(item.Split('\t')[1])&& item.Split('\t')[1].Length<30)
+                {
+                        staffNameThieu += item.Split('\t')[1] + "\n";
+                    
+                } 
+            }
+
+         
+            
+            
+            return staffNameThieu;
         }
 
         private static string IdnvFileHaveAllStaffIDThucte()
@@ -177,15 +209,15 @@ namespace chamcong
       
         private static void lietkequenchamcong1ng(string param)
         {
-            List<DateTime> gioquetvantayLythuyet = chamconglythuyet(param);
+            List<DateTimeNote> gioquetvantayLythuyet = chamconglythuyet(param);
             List<DateTime> gioquetvantayThucte = chamcongthucte(param);
-            List<DateTime> cacngayquenchamcong = new List<DateTime>();
+            List<DateTimeNote> cacngayquenchamcong = new List<DateTimeNote>();
             foreach (var lythuyet in gioquetvantayLythuyet)
             {
                 bool thuctecochamcong = false;
                 foreach (var thucte in gioquetvantayThucte)
                 {
-                    TimeSpan diff = lythuyet - thucte;
+                    TimeSpan diff = lythuyet.DateTime - thucte;
                     double minutes = Math.Abs(diff.TotalMinutes);
                     if (minutes < 70)
                     {
@@ -200,7 +232,7 @@ namespace chamcong
            new System.IO.StreamWriter(@"C:\quenchamcong.txt", true))
             {
                 file.WriteLine(param.Split('\t')[1]);
-                file.WriteLine(string.Join("\n", cacngayquenchamcong));
+                file.WriteLine(string.Join("\n", cacngayquenchamcong.Select(o => o.DateTime).ToList()));
             }
 
             //xuat data report
@@ -229,18 +261,17 @@ namespace chamcong
            new System.IO.StreamWriter(@"C:\dataquenchamcong.txt", true))
             {
                 file.WriteLine(param.Split('\t')[1]);
-                foreach (var ngayquenchamcong in cacngayquenchamcong)
+                foreach (var item in cacngayquenchamcong)
                 {
-                    foreach (var rowlythuyet in datalythuyet)
+                    if (!item.Note.Equals("Xuống ca Đêm (18h:24h)"))
                     {
-                        if (rowlythuyet.Contains(ngayquenchamcong.ToString()))
-                        {
-                            file.WriteLine(reportdungcuphap(rowlythuyet));
-                            break;
-                        }
+                        file.WriteLine("Ngày " + item.DateTime.ToString("dd/MM/yyyy") + ": " + item.Note + " quên chấm công");
+                    }
+                    else
+                    {
+                        file.WriteLine("Ngày " + item.DateTime.AddDays(-1).ToString("dd/MM/yyyy") + ": " + item.Note + " quên chấm công");
                     }
                 }
-
             }
         }
 
@@ -336,80 +367,87 @@ namespace chamcong
             return gioquetvantayThucte;
         }
 
-        private static List<DateTime> chamconglythuyet(string param)
+        private static List<DateTimeNote> chamconglythuyet(string param)
         {
             var data = File.ReadAllLines(fileLythuyet.Split('.')[0] + ".txt");
+            List<DateTimeNote> gioquetvantayLythuyet = new List<DateTimeNote>();
 
-            bool[] data1rowtungca = new bool[4 * 31 + 1];
 
-            //xuat 1 ngay 4 ca la 4 gia tri bool
+
             foreach (var row in data)
             {
                 if (row.Split('\t')[1] == param.Split('\t')[1])
                 {
-                    int x = 0;
-                    for (int j = 2; j <= DateTime.DaysInMonth(year, month)+2; j++)
+                    
+                    for (int j = 2; j < DateTime.DaysInMonth(year, month)+2; j++)
                     {
                         string temp = row.Split('\t')[j];
-                        if (temp != null)
+                        if (!string.IsNullOrWhiteSpace(temp))
                         {
-                            if (temp.Contains("S")) data1rowtungca[x] = true;
-                            if (temp.Contains("T")) data1rowtungca[x + 1] = true;
-                            if (temp.Contains("C")) data1rowtungca[x + 2] = true;
-                            if (temp.Contains("D")) data1rowtungca[x + 3] = true;
+                            if (temp.Contains("S"))
+                            {
+                                gioquetvantayLythuyet.Add(new DateTimeNote( new DateTime(year, month, j - 1, 0, 00, 0), "Lên ca Sáng (00h:06h)"));
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 6, 00, 0), "Xuống ca Sáng (00h:06h)"));
+                            }
+                            if (temp.Contains("T"))
+                            {
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 12, 00, 0), "Xuống ca Trưa (06h:12h)"));
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 6, 00, 0), "Lên ca Trưa (06h:12h)"));
+                            }
+                            if (temp.Contains("C"))
+                            {
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 12, 00, 0), "Lên ca Chiều (12h:18h)"));
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 18, 00, 0), "Xuống ca Chiều (12h:18h)"));
+                            }
+                            if (temp.Contains("D"))
+                            {
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 0, 00, 0).AddDays(1), "Xuống ca Đêm (18h:24h)"));
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 18, 00, 0), "Lên ca Đêm (18h:24h)"));
+                            }
+                            if (temp.Contains("8"))
+                            {
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 6, 00, 0).AddDays(1), "Xuống ca 8 (22h:06h)"));
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 22, 00, 0), "Lên ca 8 (22h:06h)"));
+                            }
+                            if (temp.Contains("3"))
+                            {
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 6, 00, 0), "Lên ca 3 (06h:09h)"));
+                                gioquetvantayLythuyet.Add(new DateTimeNote(new DateTime(year, month, j - 1, 9, 00, 0), "Xuống ca 3 (06h:09h)"));
+                            }
+
                         }
-                        x += 4;
+                        
                     }
                 }
             }
 
 
-            //xuat ra gio dang le phai quet van tay theo ly thuyet
-            bool giatridangco = false;
-            string[] lenxuongca = new string[4 * 31 + 1];
-            List<DateTime> gioquetvantayLythuyet = new List<DateTime>();
-            int index = 0;
-            //ngay co 30 ngay
-            for (int j = 0; j < DateTime.DaysInMonth(year, month) * 4; j++)
-            {
-                //truong hop len hoac xuong ca
-                if (data1rowtungca[j] != giatridangco)
-                {
-                    giatridangco = !giatridangco;
-                    lenxuongca[index] = giatridangco == true ? "l" : "x";
-                    //len
-                    if (giatridangco)
-                    {
-                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 0, 00, 0)); lenxuongca[index] += ",s"; }
-                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 6, 00, 0)); lenxuongca[index] += ",t"; }
-                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",c"; }
-                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",d"; }
-                    }
-                    //xuong                                                  
-                    else
-                    {
-                        if (j % 4 == 0) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 0, 00, 0)); lenxuongca[index] += ",d"; }
-                        if (j % 4 == 1) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 6, 00, 0)); lenxuongca[index] += ",s"; }
-                        if (j % 4 == 2) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 12, 00, 0)); lenxuongca[index] += ",t"; }
-                        if (j % 4 == 3) { gioquetvantayLythuyet.Add(new DateTime(year, month, j / 4 + 1, 18, 00, 0)); lenxuongca[index] += ",c"; }
-                    }
-                    index++;
-                }
-            }
+            gioquetvantayLythuyet.Sort();
+            
+                var removeDuplicates = gioquetvantayLythuyet
+    .GroupBy(i => i.DateTime)
+    .Where(g => g.Count() == 1)
+    .Select(g => g.Key);
 
-            using (System.IO.StreamWriter file =
-new System.IO.StreamWriter(@"C:\chamconglythuyet.txt", false))
-            {
-                int j = 0;
-                foreach (var item in gioquetvantayLythuyet)
-                {
-                    file.WriteLine(item + "," + lenxuongca[j]);
-                    j++;
-                }
+            List<DateTimeNote> gioquetvantayLythuyetsauxuly = new List<DateTimeNote>();
+            foreach (var d in removeDuplicates)
+                gioquetvantayLythuyetsauxuly.Add(gioquetvantayLythuyet.Find(item => item.DateTime == d));
 
-            }
 
-            return gioquetvantayLythuyet;
+
+            //            using (System.IO.StreamWriter file =
+            //new System.IO.StreamWriter(@"C:\chamconglythuyet.txt", false))
+            //            {
+            //                int j = 0;
+            //                foreach (var item in gioquetvantayLythuyet)
+            //                {
+            //                    file.WriteLine(item + "," + lenxuongca[j]);
+            //                    j++;
+            //                }
+
+            //            }
+
+            return gioquetvantayLythuyetsauxuly;
         }
     }
 }
