@@ -14,8 +14,8 @@ namespace chamcong
 {
     class Program
     {
-        private const string fileThucte = @"C:\Cham cong Dai Long Security 05.2018.pdf";
-        private const string fileLythuyet = @"C:\BẢNG CHẤM CÔNG T05 2018 (1).xlsx";
+        private const string fileThucte = @"C:\Users\Administrator\Downloads\Cham cong Dai Long Security 07.2018.pdf";
+        private const string fileLythuyet = @"C:\Users\Administrator\Downloads\BẢNG CHẤM CÔNG T07 2018.xlsx";
         private static int year = int.Parse(Regex.Match(fileThucte, @"\d{4}").Value);
         private static int month = int.Parse(Regex.Match(fileThucte, @"\d{2}").Value);
         private static string idnv= @"C:\idnv.xlsx";
@@ -57,7 +57,7 @@ namespace chamcong
 
         private static string IdnvFileHaveAllStaffNameLythuyet()
         {
-            var stringWithStaffName = File.ReadAllLines("C:\\" + System.IO.Path.GetFileNameWithoutExtension(fileLythuyet) + ".txt").Skip(8);
+            var stringWithStaffName = File.ReadAllLines(System.IO.Path.GetDirectoryName(fileLythuyet)+"\\"+System.IO.Path.GetFileNameWithoutExtension(fileLythuyet) + ".txt").Skip(8);
 
             string staffNameThieu = null;
 
