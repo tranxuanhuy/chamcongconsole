@@ -14,8 +14,8 @@ namespace chamcong
 {
     class Program
     {
-        private const string fileThucte = @"C:\Users\Administrator\Downloads\Cham cong Dai Long Security 07.2018.pdf";
-        private const string fileLythuyet = @"C:\Users\Administrator\Downloads\BẢNG CHẤM CÔNG T07 2018.xlsx";
+        private const string fileThucte = @"C:\Users\Administrator\Downloads\Cham cong Dai Long Security 07.2018 (23.07.2018 - 31.07.2018).pdf";
+        private const string fileLythuyet = @"C:\Users\Administrator\Downloads\BẢNG CHẤM CÔNG T07 2018 (2).xlsx";
         private static int year = int.Parse(Regex.Match(fileThucte, @"\d{4}").Value);
         private static int month = int.Parse(Regex.Match(fileThucte, @"\d{2}").Value);
         private static string idnv= @"C:\idnv.xlsx";
