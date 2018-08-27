@@ -14,12 +14,12 @@ namespace chamcong
 {
     class Program
     {
-        private const string fileThucte = @"C:\Users\Administrator\Downloads\Cham cong Dai Long Security 07.2018 (23.07.2018 - 31.07.2018).pdf";
-        private const string fileLythuyet = @"C:\Users\Administrator\Downloads\BẢNG CHẤM CÔNG T07 2018 (2).xlsx";
+        private const string fileThucte = @"C:\Users\Administrator\Downloads\Cham cong Dai Long Security 08.2018.pdf";
+        private const string fileLythuyet = @"C:\Users\Administrator\Downloads\BẢNG CHẤM CÔNG T08 2018.xlsx";
         private static int year = int.Parse(Regex.Match(fileThucte, @"\d{4}").Value);
         private static int month = int.Parse(Regex.Match(fileThucte, @"\d{2}").Value);
         private static string idnv= @"C:\idnv.xlsx";
-
+        private static List<DateTime> FirstdateAndLastdateThucte;
         static void Main(string[] args)
         {
             File.Delete(@"C:\dataquenchamcong.txt");
@@ -46,6 +46,11 @@ namespace chamcong
                 Console.ReadKey();
                 return; 
             }
+            FirstdateAndLastdateThucte = findFirstdateAndLastdateThucte();
+            FirstdateAndLastdateThucte.ForEach(i => Console.Write("{0}\t", i));
+            
+      
+
             List<string> listparam = taoparamconfig();
             foreach (var item in listparam)
             {
@@ -53,6 +58,65 @@ namespace chamcong
                 lietkequenchamcong1ng(item);
                 
             }
+        }
+
+        private static List<DateTime> findFirstdateAndLastdateThucte()
+        {
+            string stringWithDateTime = File.ReadAllText(System.IO.Path.GetFileNameWithoutExtension(fileThucte));
+            List<DateTime> gioquetvantayThucte = new List<DateTime>();
+
+            try
+            {
+                stringWithDateTime = stringWithDateTime.Substring(stringWithDateTime.IndexOf(Regex.Match(stringWithDateTime, @"\d{5}").Value) +1);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+
+                return null;
+            }
+            string dateMatchSave = null ;
+            while (true)
+            {
+                Match dateMatch = Regex.Match(stringWithDateTime, @"\d{2}\/\d{2}\/\d{4}");
+                Match timeMatch = Regex.Match(stringWithDateTime, @"\d{2}\:\d{2}\:\d{2}");
+              
+                
+
+                int minIndex = int.MaxValue;
+                if (!string.IsNullOrEmpty(dateMatch.Value))
+                    minIndex = Math.Min(minIndex, dateMatch.Index);
+                if (!string.IsNullOrEmpty(timeMatch.Value))
+                    minIndex = Math.Min(minIndex, timeMatch.Index);
+            
+                 if (minIndex == timeMatch.Index)
+                {
+                    string date = timeMatch.Value;
+
+                    var dateTime = DateTime.ParseExact(date, "HH:mm:ss", CultureInfo.CurrentCulture);
+
+                    gioquetvantayThucte.Add(new DateTime(int.Parse(dateMatchSave.Split('/')[2]), int.Parse(dateMatchSave.Split('/')[1]), int.Parse(dateMatchSave.Split('/')[0]), int.Parse(timeMatch.Value.Split(':')[0]), int.Parse(timeMatch.Value.Split(':')[1]), 0));
+                    stringWithDateTime = stringWithDateTime.Substring(timeMatch.Index + 1);
+
+
+                }
+                else if (minIndex == dateMatch.Index)
+                {
+                    dateMatchSave = dateMatch.Value;
+                    stringWithDateTime = stringWithDateTime.Substring(dateMatch.Index + 1);
+                }
+
+                else if (string.IsNullOrEmpty(dateMatch.Value))
+                {
+                    break;
+                }
+                
+            }
+
+            gioquetvantayThucte.Sort();
+            List<DateTime> gioquetvantayThucteFirstAndLast = new List<DateTime>();
+            gioquetvantayThucteFirstAndLast.Add(gioquetvantayThucte.First());
+            gioquetvantayThucteFirstAndLast.Add(gioquetvantayThucte.Last());
+            return gioquetvantayThucteFirstAndLast;
         }
 
         private static string IdnvFileHaveAllStaffNameLythuyet()
@@ -429,25 +493,28 @@ namespace chamcong
     .Where(g => g.Count() == 1)
     .Select(g => g.Key);
 
-            List<DateTimeNote> gioquetvantayLythuyetsauxuly = new List<DateTimeNote>();
+            List<DateTimeNote> gioquetvantayLythuyetsauxulyDuplicate = new List<DateTimeNote>();
+            List<DateTimeNote> gioquetvantayLythuyetsauxulyDuplicateAndBetweenFisrtLast = new List<DateTimeNote>();
             foreach (var d in removeDuplicates)
-                gioquetvantayLythuyetsauxuly.Add(gioquetvantayLythuyet.Find(item => item.DateTime == d));
+                gioquetvantayLythuyetsauxulyDuplicate.Add(gioquetvantayLythuyet.Find(item => item.DateTime == d));
 
+            foreach (var d in gioquetvantayLythuyetsauxulyDuplicate)
+                if (d.DateTime > FirstdateAndLastdateThucte.First() && d.DateTime < FirstdateAndLastdateThucte.Last())
+                    gioquetvantayLythuyetsauxulyDuplicateAndBetweenFisrtLast.Add(d);
 
+                //            using (System.IO.StreamWriter file =
+                //new System.IO.StreamWriter(@"C:\chamconglythuyet.txt", false))
+                //            {
+                //                int j = 0;
+                //                foreach (var item in gioquetvantayLythuyet)
+                //                {
+                //                    file.WriteLine(item + "," + lenxuongca[j]);
+                //                    j++;
+                //                }
 
-            //            using (System.IO.StreamWriter file =
-            //new System.IO.StreamWriter(@"C:\chamconglythuyet.txt", false))
-            //            {
-            //                int j = 0;
-            //                foreach (var item in gioquetvantayLythuyet)
-            //                {
-            //                    file.WriteLine(item + "," + lenxuongca[j]);
-            //                    j++;
-            //                }
+                    //            }
 
-            //            }
-
-            return gioquetvantayLythuyetsauxuly;
+            return gioquetvantayLythuyetsauxulyDuplicateAndBetweenFisrtLast;
         }
     }
 }
